@@ -1,6 +1,6 @@
 ﻿using System.Net.Sockets;
-using System.Text.Json;
 using System.IO;
+using Microsoft.Extensions.Configuration;
 using Discord;
 using Discord.WebSocket;
 
@@ -12,12 +12,21 @@ public class Program
 
     public async Task MainAsync()
     {
+        var config = new ConfigurationBuilder()
+            .AddUserSecrets<Program>() // Looks in that hidden folder on your PC
+            .Build();
+
         // Read the token from the file
-        var json = File.ReadAllText("appsettings.json");
-        using var doc = JsonDocument.Parse(json);
-        string token = doc.RootElement.GetProperty("BotToken").GetString();
+
+        string token = config["DiscordToken"];
 
         var _client = new DiscordSocketClient();
+
+        if (string.IsNullOrEmpty(token))
+        {
+            Console.WriteLine("Error: No token found in User Secrets!");
+            return;
+        }
 
         // Use the variable 'token' instead of a hardcoded string
         await _client.LoginAsync(TokenType.Bot, token);
